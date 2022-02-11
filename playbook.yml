@@ -1,0 +1,62 @@
+---
+- hosts: webservers
+  become: yes
+  tasks:
+
+  - name: Add Docker Repository
+    get_url:
+      url: https://download.docker.com/linux/centos/docker-ce.repo
+      dest: /etc/yum.repos.d/docker-ce.repo
+
+  - name: Install Docker Packages
+    yum: 
+      name: 
+        - "docker-ce"
+        - "docker-ce-cli"
+        - "containerd.io"
+      state: present
+      update_cache: yes
+
+  - name: Install Docker sdk for python
+    pip:
+      name: "docker"
+    vars: 
+      ansible_python_interpreter: /bin/python3
+
+  - name: Start docker service
+    service:
+      name: "docker"
+      state: started
+     
+  - name: webpage directory
+    file:
+      state: directory
+      dest: /root/webpage
+
+  - name: pull httpd docker image
+    docker_image:
+      name: "httpd"
+      tag: latest
+      source: pull
+    vars:
+      ansible_python_interpreter: /bin/python3
+
+
+  - name: Copy website to the host
+    copy:
+      src: ./hello.html
+      dest: /root/webpage
+
+  - name: Run docker container
+    docker_container:
+      name: "WebServer"
+      image: httpd:latest
+      state: started
+      exposed_ports:
+      - "80"
+      ports:
+      - "8090:80"
+      volumes:
+      - /root/webpage/:/usr/local/apache2/htdocs/
+    vars:
+      ansible_python_interpreter: /bin/python3
