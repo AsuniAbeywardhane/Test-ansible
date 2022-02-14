@@ -2,7 +2,12 @@
 - hosts: webservers
   become: yes
   tasks:
-
+  
+  - name: Install Python
+    package: 
+      name: "python3"
+      state: present
+     
   - name: Add Docker Repository
     get_url:
       url: https://download.docker.com/linux/centos/docker-ce.repo
